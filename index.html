@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Pro Trading Journal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: Arial;
+  background: #111;
+  color: white;
+  padding: 10px;
+}
+
+input, select {
+  width: 95%;
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 5px;
+  border: none;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: orange;
+  border: none;
+  margin-top: 5px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.card {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+}
+
+.win { background: #0f5132; }
+.loss { background: #842029; }
+
+.summary {
+  background: #222;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+}
+
+.delete {
+  background: red;
+  margin-top: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📊 Pro Trading Journal</h2>
+
+<input id="pair" placeholder="Pair (EURUSD)">
+<input id="entry" placeholder="Entry">
+<input id="sl" placeholder="Stop Loss">
+<input id="target" placeholder="Target">
+<input id="pnl" placeholder="PnL (₹ or $)">
+
+<select id="type">
+  <option value="win">Win</option>
+  <option value="loss">Loss</option>
+</select>
+
+<button onclick="addTrade()">Add Trade</button>
+
+<div id="list"></div>
+
+<div class="summary">
+  <p>Total Trades: <span id="total"></span></p>
+  <p>Wins: <span id="wins"></span></p>
+  <p>Losses: <span id="losses"></span></p>
+  <p>Win Rate: <span id="winrate"></span></p>
+  <p>Total PnL: <span id="totalpnl"></span></p>
+</div>
+
+<script>
+
+let trades = JSON.parse(localStorage.getItem("trades")) || [];
+
+function addTrade() {
+  let pair = pairInput.value;
+  let entry = parseFloat(entryInput.value);
+  let sl = parseFloat(slInput.value);
+  let target = parseFloat(targetInput.value);
+  let pnl = parseFloat(pnlInput.value);
+  let type = typeInput.value;
+
+  let rr = ((target - entry) / (entry - sl)).toFixed(2);
+
+  trades.push({pair, entry, sl, target, pnl, type, rr});
+
+  localStorage.setItem("trades", JSON.stringify(trades));
+  updateUI();
+}
+
+function deleteTrade(i) {
+  trades.splice(i, 1);
+  localStorage.setItem("trades", JSON.stringify(trades));
+  updateUI();
+}
+
+function updateUI() {
+  list.innerHTML = "";
+
+  let wins = 0, losses = 0, totalPnL = 0;
+
+  trades.forEach((t, i) => {
+    let div = document.createElement("div");
+    div.className = "card " + t.type;
+
+    div.innerHTML = `
+      <b>${t.pair}</b><br>
+      Entry: ${t.entry} | SL: ${t.sl}<br>
+      Target: ${t.target} | RR: ${t.rr}<br>
+      PnL: ${t.pnl}
+      <button class="delete" onclick="deleteTrade(${i})">Delete</button>
+    `;
+
+    if (t.type === "win") wins++;
+    else losses++;
+
+    totalPnL += t.pnl;
+
+    list.appendChild(div);
+  });
+
+  let total = trades.length;
+  let winrate = total ? ((wins / total) * 100).toFixed(1) : 0;
+
+  totalEl.innerText = total;
+  winsEl.innerText = wins;
+  lossesEl.innerText = losses;
+  winrateEl.innerText = winrate + "%";
+  totalpnlEl.innerText = totalPnL;
+}
+
+const pairInput = document.getElementById("pair");
+const entryInput = document.getElementById("entry");
+const slInput = document.getElementById("sl");
+const targetInput = document.getElementById("target");
+const pnlInput = document.getElementById("pnl");
+const typeInput = document.getElementById("type");
+
+const list = document.getElementById("list");
+
+const totalEl = document.getElementById("total");
+const winsEl = document.getElementById("wins");
+const lossesEl = document.getElementById("losses");
+const winrateEl = document.getElementById("winrate");
+const totalpnlEl = document.getElementById("totalpnl");
+
+updateUI();
+
+</script>
+
+</body>
+</html>
