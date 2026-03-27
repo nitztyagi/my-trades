@@ -1,72 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Pro Trading Journal</title>
+<title>Trading Journal Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
+  background: #0f172a;
+  color: #e2e8f0;
   font-family: Arial;
-  background: #111;
-  color: white;
-  padding: 10px;
+  padding: 15px;
 }
 
-input, select {
-  width: 95%;
-  padding: 8px;
-  margin: 5px 0;
-  border-radius: 5px;
+h2 {
+  text-align: center;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 6px;
   border: none;
+  background: #1e293b;
+  color: white;
+}
+
+textarea {
+  height: 60px;
 }
 
 button {
   width: 100%;
-  padding: 10px;
-  background: orange;
+  padding: 12px;
+  background: #22c55e;
   border: none;
-  margin-top: 5px;
-  border-radius: 5px;
+  border-radius: 6px;
   font-weight: bold;
+  margin-top: 10px;
 }
 
 .card {
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 5px;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 8px;
 }
 
-.win { background: #0f5132; }
-.loss { background: #842029; }
+.win {
+  background: #064e3b;
+}
+
+.loss {
+  background: #7f1d1d;
+}
 
 .summary {
-  background: #222;
+  background: #1e293b;
   padding: 10px;
-  margin-top: 10px;
-  border-radius: 5px;
+  margin-top: 15px;
+  border-radius: 8px;
 }
 
 .delete {
   background: red;
-  margin-top: 5px;
+  margin-top: 8px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📊 Pro Trading Journal</h2>
+<h2>📊 Trading Journal Pro</h2>
 
-<input id="pair" placeholder="Pair (EURUSD)">
-<input id="entry" placeholder="Entry">
+<select id="market">
+  <option>NIFTY</option>
+  <option>FOREX</option>
+</select>
+
+<input id="pair" placeholder="Pair / Index (EURUSD / NIFTY)">
+<input id="entry" placeholder="Entry Price">
 <input id="sl" placeholder="Stop Loss">
 <input id="target" placeholder="Target">
-<input id="pnl" placeholder="PnL (₹ or $)">
+<input id="pnl" placeholder="Profit / Loss">
 
 <select id="type">
   <option value="win">Win</option>
   <option value="loss">Loss</option>
 </select>
+
+<textarea id="note" placeholder="Trade reason / mistake / emotion..."></textarea>
 
 <button onclick="addTrade()">Add Trade</button>
 
@@ -85,23 +107,24 @@ button {
 let trades = JSON.parse(localStorage.getItem("trades")) || [];
 
 function addTrade() {
-  let pair = pairInput.value;
-  let entry = parseFloat(entryInput.value);
-  let sl = parseFloat(slInput.value);
-  let target = parseFloat(targetInput.value);
-  let pnl = parseFloat(pnlInput.value);
-  let type = typeInput.value;
+  let trade = {
+    market: market.value,
+    pair: pair.value,
+    entry: entry.value,
+    sl: sl.value,
+    target: target.value,
+    pnl: parseFloat(pnl.value),
+    type: type.value,
+    note: note.value
+  };
 
-  let rr = ((target - entry) / (entry - sl)).toFixed(2);
-
-  trades.push({pair, entry, sl, target, pnl, type, rr});
-
+  trades.push(trade);
   localStorage.setItem("trades", JSON.stringify(trades));
   updateUI();
 }
 
 function deleteTrade(i) {
-  trades.splice(i, 1);
+  trades.splice(i,1);
   localStorage.setItem("trades", JSON.stringify(trades));
   updateUI();
 }
@@ -109,21 +132,22 @@ function deleteTrade(i) {
 function updateUI() {
   list.innerHTML = "";
 
-  let wins = 0, losses = 0, totalPnL = 0;
+  let wins=0, losses=0, totalPnL=0;
 
-  trades.forEach((t, i) => {
+  trades.forEach((t,i) => {
     let div = document.createElement("div");
     div.className = "card " + t.type;
 
     div.innerHTML = `
-      <b>${t.pair}</b><br>
+      <b>${t.market} - ${t.pair}</b><br>
       Entry: ${t.entry} | SL: ${t.sl}<br>
-      Target: ${t.target} | RR: ${t.rr}<br>
-      PnL: ${t.pnl}
+      Target: ${t.target}<br>
+      PnL: ${t.pnl}<br>
+      Note: ${t.note}
       <button class="delete" onclick="deleteTrade(${i})">Delete</button>
     `;
 
-    if (t.type === "win") wins++;
+    if(t.type==="win") wins++;
     else losses++;
 
     totalPnL += t.pnl;
@@ -132,7 +156,7 @@ function updateUI() {
   });
 
   let total = trades.length;
-  let winrate = total ? ((wins / total) * 100).toFixed(1) : 0;
+  let winrate = total ? ((wins/total)*100).toFixed(1) : 0;
 
   totalEl.innerText = total;
   winsEl.innerText = wins;
@@ -141,12 +165,14 @@ function updateUI() {
   totalpnlEl.innerText = totalPnL;
 }
 
-const pairInput = document.getElementById("pair");
-const entryInput = document.getElementById("entry");
-const slInput = document.getElementById("sl");
-const targetInput = document.getElementById("target");
-const pnlInput = document.getElementById("pnl");
-const typeInput = document.getElementById("type");
+const market = document.getElementById("market");
+const pair = document.getElementById("pair");
+const entry = document.getElementById("entry");
+const sl = document.getElementById("sl");
+const target = document.getElementById("target");
+const pnl = document.getElementById("pnl");
+const type = document.getElementById("type");
+const note = document.getElementById("note");
 
 const list = document.getElementById("list");
 
